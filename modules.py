@@ -47,9 +47,9 @@ def search_by_filter(driver: webdriver, args: dict) -> None:
             btn = WebDriverWait(driver, 20).until(
                 EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_0']")))
             driver.execute_script("arguments[0].click()", btn)
-            btn2 = WebDriverWait(driver, 20).until(
-                EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_1']")))
-            driver.execute_script("arguments[0].click()", btn2)
+            # btn2 = WebDriverWait(driver, 20).until(
+            #     EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_1']")))
+            # driver.execute_script("arguments[0].click()", btn2)
         except Exception as e:
             print(e)
 
@@ -96,6 +96,7 @@ def parse_pages(driver: webdriver) -> List[Dict[str, Union[str, Any]]]:
         try:
             WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, attr))).click()
         except TimeoutException as e:
+            time.sleep(0.5)
             logger.info(str(e))
 
         driver.switch_to_window(driver.window_handles[-1])
@@ -105,12 +106,20 @@ def parse_pages(driver: webdriver) -> List[Dict[str, Union[str, Any]]]:
 
         if abstract == []:
             switch_to_main_window(driver)
+            time.sleep(0.5)
             continue
 
         abstract = remove_html_tag(str(abstract[0]))
 
-        if is_english(abstract) != 'ko':
+        # 초록이 없을 수도 있음.
+        try:
+            if is_english(abstract) != 'ko':
+                switch_to_main_window(driver)
+                continue
+        except Exception as e:
+            logger.info(str(e))
             switch_to_main_window(driver)
+            time.sleep(0.5)
             continue
 
         citation_keyword = bs_.head.find('meta', {'name': 'citation_keywords'})
@@ -118,10 +127,18 @@ def parse_pages(driver: webdriver) -> List[Dict[str, Union[str, Any]]]:
         # 키워드가 없으면 닫는다.
         if citation_keyword == None:
             switch_to_main_window(driver)
+            time.sleep(0.5)
+            continue
+
+        citation_keyword = citation_keyword.get('content')
+
+        # 키워드가 영어로만 되어있을 경우 닫는다.
+        if citation_keyword.isascii():
+            switch_to_main_window(driver)
+            time.sleep(0.5)
             continue
 
         title = bs_.find('meta', property="og:title")['content']
-        citation_keyword = citation_keyword.get('content')
         logger.info(abstract.strip().lower())
         logger.info(citation_keyword.strip().lower())
         logger.info(title.strip().lower())
@@ -131,6 +148,8 @@ def parse_pages(driver: webdriver) -> List[Dict[str, Union[str, Any]]]:
             'keyword': citation_keyword.lower(),
             'title': title.lower()
         })
+
+        time.sleep(1)
 
         switch_to_main_window(driver)
 

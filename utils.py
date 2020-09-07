@@ -21,3 +21,5 @@ def is_english(s: str) -> str:
 def switch_to_main_window(driver: webdriver) -> None:
     driver.close()
     driver.switch_to.window(driver.window_handles[0])
+
+
