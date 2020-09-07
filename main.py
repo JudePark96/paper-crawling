@@ -5,6 +5,7 @@ __email__ = 'judepark@kookmin.ac.kr'
 import json
 import logging
 import pandas as pd
+import argparse
 
 from selenium import webdriver
 from tqdm import tqdm
@@ -16,15 +17,22 @@ if __name__ == '__main__':
                         level=logging.INFO)
     logger = logging.getLogger(__name__)
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--search_keyword", default='딥러닝', type=str)
+    parser.add_argument("--year_start", default=2015, type=int)
+    parser.add_argument("--year_end", default=2020, type=int)
+
+    args = parser.parse_args()
+
     path = './chromedriver_v85'
     driver = webdriver.Chrome(path)
     driver.get('https://www.dbpia.co.kr/')
 
     search_filter = {
-        'keyword': '딥러닝',
+        'keyword': args.search_keyword,
         'year_filter': True,
-        'year_start': 2015,
-        'year_end': 2020
+        'year_start': args.year_start,
+        'year_end': args.year_end
     }
 
     logger.info(driver.window_handles)
