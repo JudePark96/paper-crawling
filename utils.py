@@ -5,6 +5,7 @@ __email__ = 'judepark@kookmin.ac.kr'
 import re
 
 from langdetect import detect
+from selenium import webdriver
 
 
 def remove_html_tag(raw_html: str) -> str:
@@ -15,3 +16,8 @@ def remove_html_tag(raw_html: str) -> str:
 
 def is_english(s: str) -> str:
     return detect(s)
+
+
+def switch_to_main_window(driver: webdriver) -> None:
+    driver.close()
+    driver.switch_to.window(driver.window_handles[0])

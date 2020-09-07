@@ -8,11 +8,12 @@ from typing import List, Dict, Union, Any
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
-from utils import remove_html_tag, is_english
+from utils import remove_html_tag, is_english, switch_to_main_window
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
@@ -65,7 +66,7 @@ def search_by_filter(driver: webdriver, args: dict) -> None:
             logger.info('trying to retry or no more pages. please wait.')
             break
         w_count += 1
-        logger.info(" + page [{}]".format(w_count))
+        logger.info("page [{}] ...".format(w_count))
 
 
 def parse_pages(driver: webdriver) -> List[Dict[str, Union[str, Any]]]:
@@ -90,47 +91,48 @@ def parse_pages(driver: webdriver) -> List[Dict[str, Union[str, Any]]]:
         attr = f"//a[@href='{link}']"
 
         if idx % 20 == 0:
-            logger.info(attr)
+            logger.info(f'{idx} -> {attr}')
 
-        WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.XPATH, attr))).click()
+        try:
+            WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, attr))).click()
+        except TimeoutException as e:
+            logger.info(str(e))
 
-    for window in driver.window_handles[1:]:
-        driver.switch_to_window(window)
+        driver.switch_to_window(driver.window_handles[-1])
         page = driver.page_source
         bs_ = BeautifulSoup(page, 'html.parser')
-
         abstract = bs_.select('#pub_abstract > div.thesisDetailArea.eToggleSection > div > p:nth-child(1)')
 
         if abstract == []:
-            driver.close()
+            switch_to_main_window(driver)
             continue
 
         abstract = remove_html_tag(str(abstract[0]))
 
-        # 한국어 초록이 아니면 창을 닫는다.
         if is_english(abstract) != 'ko':
-            driver.close()
+            switch_to_main_window(driver)
             continue
 
         citation_keyword = bs_.head.find('meta', {'name': 'citation_keywords'})
 
         # 키워드가 없으면 닫는다.
         if citation_keyword == None:
-            driver.close()
+            switch_to_main_window(driver)
             continue
 
         title = bs_.find('meta', property="og:title")['content']
         citation_keyword = citation_keyword.get('content')
-
         logger.info(abstract.strip().lower())
         logger.info(citation_keyword.strip().lower())
         logger.info(title.strip().lower())
 
         dataset.append({
-            'abstract': abstract,
-            'keyword': citation_keyword,
-            'title': title
+            'abstract': abstract.lower(),
+            'keyword': citation_keyword.lower(),
+            'title': title.lower()
         })
+
+        switch_to_main_window(driver)
 
     logger.info("Number of data -> {}".format(len(dataset)))
 
