@@ -40,18 +40,20 @@ def search_by_filter(driver: webdriver, args: dict) -> None:
         click_btn = xpath("//*[@id='sidebar']/form/div[3]/div/div[1]/ul/li[4]/p/button")
         driver.execute_script("arguments[0].click();", click_btn)
 
-    # 학술저널과 학술대회자료
     for i in range(1):
         time.sleep(0.5)
         try:
+            # 학술저널
             btn = WebDriverWait(driver, 20).until(
                 EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_0']")))
             driver.execute_script("arguments[0].click()", btn)
-            # btn2 = WebDriverWait(driver, 20).until(
-            #     EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_1']")))
-            # driver.execute_script("arguments[0].click()", btn2)
+
+            # 학술대회자료
+            btn2 = WebDriverWait(driver, 20).until(
+                EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_1']")))
+            driver.execute_script("arguments[0].click()", btn2)
         except Exception as e:
-            print(e)
+            logger.info(str(e))
 
     # 더보기
     w_count = 0

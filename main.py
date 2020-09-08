@@ -39,14 +39,10 @@ if __name__ == '__main__':
     logger.info(json.dumps(search_filter))
     search_by_filter(driver, args=search_filter)
     dataset = parse_pages(driver)
-
-    title = [data['title'] for data in tqdm(dataset)]
-    abstract = [data['abstract'] for data in tqdm(dataset)]
-    keyword = [data['keyword'] for data in tqdm(dataset)]
-
-    df = dict(title=title, abstract=abstract, keyword=keyword)
-    df = pd.DataFrame(df)
-
-    output_file_name = './{}_{}_{}.csv'.format(search_filter['keyword'], search_filter['year_start'],
+    output_file_name = './{}_{}_{}.json'.format(search_filter['keyword'], search_filter['year_start'],
                                                search_filter['year_end'])
-    df.to_csv(output_file_name, encoding='utf-8')
+
+    with open(output_file_name, 'w', encoding='utf-8') as fo:
+        for data in tqdm(dataset):
+            fo.write("{}\n".format(json.dumps(data)))
+        fo.close()
