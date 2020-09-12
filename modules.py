@@ -40,20 +40,29 @@ def search_by_filter(driver: webdriver, args: dict) -> None:
         click_btn = xpath("//*[@id='sidebar']/form/div[3]/div/div[1]/ul/li[4]/p/button")
         driver.execute_script("arguments[0].click();", click_btn)
 
+    flag = False
+
     for i in range(1):
         time.sleep(0.5)
         try:
-            # 학술대회자료
-            # btn = WebDriverWait(driver, 20).until(
-            #     EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_0']")))
-            # driver.execute_script("arguments[0].click()", btn)
+            page_source = driver.page_source
+            bs = BeautifulSoup(page_source, 'html.parser')
 
-            # 학술저널
-            btn2 = WebDriverWait(driver, 20).until(
-                EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_1']")))
-            driver.execute_script("arguments[0].click()", btn2)
+            for i in range(1, 6):
+                try:
+                    if '학술저널' in remove_html_tag(str(bs.select(f'#dev_plctType > li:nth-child({str(i)}) > span')[0])):
+                        flag = True
+                        btn = WebDriverWait(driver, 20).until(
+                            EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_{}']".format(str(i - 1)))))
+                        driver.execute_script("arguments[0].click()", btn)
+                except Exception as e:
+                    logger.info(str(e))
+
         except Exception as e:
             logger.info(str(e))
+
+    if flag is False:
+        exit(0)
 
     # 더보기
     w_count = 0
