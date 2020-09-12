@@ -43,12 +43,12 @@ def search_by_filter(driver: webdriver, args: dict) -> None:
     for i in range(1):
         time.sleep(0.5)
         try:
-            # 학술저널
-            btn = WebDriverWait(driver, 20).until(
-                EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_0']")))
-            driver.execute_script("arguments[0].click()", btn)
-
             # 학술대회자료
+            # btn = WebDriverWait(driver, 20).until(
+            #     EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_0']")))
+            # driver.execute_script("arguments[0].click()", btn)
+
+            # 학술저널
             btn2 = WebDriverWait(driver, 20).until(
                 EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_1']")))
             driver.execute_script("arguments[0].click()", btn2)
