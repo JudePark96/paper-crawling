@@ -160,6 +160,8 @@ def parse_pages(driver: webdriver) -> List[Dict[str, Union[str, Any]]]:
             'title': title.lower()
         })
 
+        logger.info(f'{str(len(dataset))} data is in the list.')
+
         time.sleep(1)
 
         switch_to_main_window(driver)
