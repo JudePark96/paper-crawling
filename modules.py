@@ -43,17 +43,17 @@ def search_by_filter(driver: webdriver, args: dict) -> None:
     flag = False
 
     for i in range(1):
-        time.sleep(0.5)
+        time.sleep(2)
         try:
             page_source = driver.page_source
             bs = BeautifulSoup(page_source, 'html.parser')
 
-            for i in range(1, 6):
+            for j in range(1, 6):
                 try:
-                    if '학술저널' in remove_html_tag(str(bs.select(f'#dev_plctType > li:nth-child({str(i)}) > span')[0])):
+                    if '학술저널' in remove_html_tag(str(bs.select(f'#dev_plctType > li:nth-child({str(j)}) > span')[0])):
                         flag = True
                         btn = WebDriverWait(driver, 20).until(
-                            EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_{}']".format(str(i - 1)))))
+                            EC.element_to_be_clickable((By.XPATH, "//*[@id='pub_check_sort3_{}']".format(str(j - 1)))))
                         driver.execute_script("arguments[0].click()", btn)
                 except Exception as e:
                     logger.info(str(e))
