@@ -106,66 +106,65 @@ def parse_pages(driver: webdriver) -> List[Dict[str, Union[str, Any]]]:
 
         try:
             WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, attr))).click()
+            driver.switch_to_window(driver.window_handles[-1])
+            page = driver.page_source
+            bs_ = BeautifulSoup(page, 'html.parser')
+            abstract = bs_.select('#pub_abstract > div.thesisDetailArea.eToggleSection > div > p:nth-child(1)')
+
+            if abstract == []:
+                switch_to_main_window(driver)
+                time.sleep(0.5)
+                continue
+
+            abstract = remove_html_tag(str(abstract[0]))
+
+            # 초록이 없을 수도 있음.
+            try:
+                if is_english(abstract) != 'ko':
+                    switch_to_main_window(driver)
+                    continue
+            except Exception as e:
+                logger.info(str(e))
+                switch_to_main_window(driver)
+                time.sleep(0.5)
+                continue
+
+            citation_keyword = bs_.head.find('meta', {'name': 'citation_keywords'})
+
+            # 키워드가 없으면 닫는다.
+            if citation_keyword == None:
+                switch_to_main_window(driver)
+                time.sleep(0.5)
+                continue
+
+            citation_keyword = citation_keyword.get('content')
+
+            # 키워드가 영어로만 되어있을 경우 닫는다.
+            if citation_keyword.isascii():
+                switch_to_main_window(driver)
+                time.sleep(0.5)
+                continue
+
+            title = bs_.find('meta', property="og:title")['content']
+            logger.info(abstract.strip().lower())
+            logger.info(citation_keyword.strip().lower())
+            logger.info(title.strip().lower())
+
+            dataset.append({
+                'abstract': abstract.lower(),
+                'keyword': citation_keyword.lower(),
+                'title': title.lower()
+            })
+
+            logger.info(f'{str(len(dataset))} data is in the list.')
+
+            time.sleep(1)
+
+            switch_to_main_window(driver)
+
+            logger.info("Number of data -> {}".format(len(dataset)))
         except TimeoutException as e:
             time.sleep(0.5)
             logger.info(str(e))
-
-        driver.switch_to_window(driver.window_handles[-1])
-        page = driver.page_source
-        bs_ = BeautifulSoup(page, 'html.parser')
-        abstract = bs_.select('#pub_abstract > div.thesisDetailArea.eToggleSection > div > p:nth-child(1)')
-
-        if abstract == []:
-            switch_to_main_window(driver)
-            time.sleep(0.5)
-            continue
-
-        abstract = remove_html_tag(str(abstract[0]))
-
-        # 초록이 없을 수도 있음.
-        try:
-            if is_english(abstract) != 'ko':
-                switch_to_main_window(driver)
-                continue
-        except Exception as e:
-            logger.info(str(e))
-            switch_to_main_window(driver)
-            time.sleep(0.5)
-            continue
-
-        citation_keyword = bs_.head.find('meta', {'name': 'citation_keywords'})
-
-        # 키워드가 없으면 닫는다.
-        if citation_keyword == None:
-            switch_to_main_window(driver)
-            time.sleep(0.5)
-            continue
-
-        citation_keyword = citation_keyword.get('content')
-
-        # 키워드가 영어로만 되어있을 경우 닫는다.
-        if citation_keyword.isascii():
-            switch_to_main_window(driver)
-            time.sleep(0.5)
-            continue
-
-        title = bs_.find('meta', property="og:title")['content']
-        logger.info(abstract.strip().lower())
-        logger.info(citation_keyword.strip().lower())
-        logger.info(title.strip().lower())
-
-        dataset.append({
-            'abstract': abstract.lower(),
-            'keyword': citation_keyword.lower(),
-            'title': title.lower()
-        })
-
-        logger.info(f'{str(len(dataset))} data is in the list.')
-
-        time.sleep(1)
-
-        switch_to_main_window(driver)
-
-    logger.info("Number of data -> {}".format(len(dataset)))
 
     return dataset
